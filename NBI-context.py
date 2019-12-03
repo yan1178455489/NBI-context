@@ -116,19 +116,21 @@ if __name__ == '__main__':
 
     print(u_num, i_num)
 
-    row_offset = np.zeros(u_num, dtype=int)
-    col_indices = []
-    value_array = []
+    # row_offset = np.zeros(u_num, dtype=int)
+    # col_indices = []
+    # value_array = []
+    # for tuple in train_data:
+    #     uid = tuple[0]
+    #     eid = tuple[1]
+    #     row_offset[uid] += 1
+    #     col_indices.append(eid)
+    #     value_array.append(1)
+    # for i in range(1,u_num):
+    #     row_offset[i] += row_offset[i-1]
+    # ue = spy.sparse.csr_matrix((value_array, col_indices, row_offset), shape=(u_num, i_num))
+    ue = np.zeros((u_num, i_num))
     for tuple in train_data:
-        uid = tuple[0]
-        eid = tuple[1]
-        row_offset[uid] += 1
-        col_indices.append(eid)
-        value_array.append(1)
-    for i in range(1,u_num):
-        row_offset[i] += row_offset[i-1]
-
-    ue = spy.sparse.csr_matrix((value_array, col_indices, row_offset), shape=(u_num, i_num))
+        ue[tuple[0]][tuple[1]] = 1
 
     # 读取群组活动文件
     he = []
