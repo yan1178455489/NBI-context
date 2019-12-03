@@ -1,0 +1,8 @@
+dataset=douban_ran
+ufactor=4
+lcfactor=4
+hfactor=4
+time_factor=2
+topN=5
+
+results=douban_ran/results.txt
