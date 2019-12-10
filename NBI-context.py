@@ -264,11 +264,11 @@ if __name__ == '__main__':
                 if recommend_list[i][j] in u_testset[u]:
                     hits += 1
                     DCG += math.log(j + 2, 2)
-                Novelty += (1+max_k)/(1+participant_unum[recommend_list[i][j]])/math.log(j + 2, 2)
+                Novelty += (1+participant_unum[recommend_list[i][j]])/(1+max_k)/math.log(j + 2, 2)
             Precision += top_n
             Recall += len(u_testset[u])
 
-    Novelty = Novelty / top_n / cand_user_num
+    Novelty = 1 - Novelty / top_n / cand_user_num
     Precision = hits / Precision
     Recall = hits / Recall
     NDCG = DCG / cand_user_num / iDCG
