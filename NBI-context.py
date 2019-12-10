@@ -34,6 +34,7 @@ class NBI(BaseEstimator, ClassifierMixin):
 
         a = np.asanyarray(a)
         f_prime = np.zeros(a.shape[0])
+        # f_prime = np.zeros(i_num)
 
         for j in range(f_prime.shape[0]):
             f_prime[j] = np.sum(np.multiply(self.W_[j, :], a))
@@ -116,36 +117,36 @@ if __name__ == '__main__':
 
     print(u_num, i_num)
 
-    # row_offset = np.zeros(u_num, dtype=int)
+    # row_offset = np.zeros(u_num+1, dtype=int)
     # col_indices = []
     # value_array = []
     # for tuple in train_data:
     #     uid = tuple[0]
     #     eid = tuple[1]
-    #     row_offset[uid] += 1
+    #     row_offset[uid+1] += 1
     #     col_indices.append(eid)
     #     value_array.append(1)
-    # for i in range(1,u_num):
+    # for i in range(1,u_num+1):
     #     row_offset[i] += row_offset[i-1]
     # ue = spy.sparse.csr_matrix((value_array, col_indices, row_offset), shape=(u_num, i_num))
     ue = np.zeros((u_num, i_num))
     for tuple in train_data:
         ue[tuple[0]][tuple[1]] = 1
 
-    # 读取群组活动文件
-    he = []
-    eh_file = open(dataset+'/group_event.csv', 'r')
-    for line in eh_file:
-        data = line.split(',')
-        he.append([int(data[0]),int(data[1])])
-    eh_file.close()
-    he = np.array(he)
-    host_num = max(he[:,0]) + 1
-    host_event = np.zeros((host_num, i_num))
-    for line in he:
-        if line[1] >= i_num:
-            continue
-        host_event[line[0]][line[1]] = 1
+    # # 读取群组活动文件
+    # he = []
+    # eh_file = open(dataset+'/group_event.csv', 'r')
+    # for line in eh_file:
+    #     data = line.split(',')
+    #     he.append([int(data[0]),int(data[1])])
+    # eh_file.close()
+    # he = np.array(he)
+    # host_num = max(he[:,0]) + 1
+    # host_event = np.zeros((host_num, i_num))
+    # for line in he:
+    #     if line[1] >= i_num:
+    #         continue
+    #     host_event[line[0]][line[1]] = 1
     # # 地点活动文件
     # le = []
     # et_file = open(dataset+'/location_event.csv', 'r')
@@ -160,44 +161,44 @@ if __name__ == '__main__':
     #     if line[1] >= i_num:
     #         continue
     #     loc_event[line[0]][line[1]] = 1
-    # 时间活动文件
-    time_e = []
-    et_file = open(dataset + '/time_event.csv', 'r')
-    for line in et_file:
-        data = line.split(',')
-        time_e.append([int(data[0]), int(data[1])])
-    et_file.close()
-    time_e = np.array(time_e)
-    time_num = max(time_e[:, 0]) + 1
-    time_event = np.zeros((time_num, i_num))
-    for line in time_e:
-        if line[1] >= i_num:
-            continue
-        time_event[line[0]][line[1]] = 1
+    # # 时间活动文件
+    # time_e = []
+    # et_file = open(dataset + '/time_event.csv', 'r')
+    # for line in et_file:
+    #     data = line.split(',')
+    #     time_e.append([int(data[0]), int(data[1])])
+    # et_file.close()
+    # time_e = np.array(time_e)
+    # time_num = max(time_e[:, 0]) + 1
+    # time_event = np.zeros((time_num, i_num))
+    # for line in time_e:
+    #     if line[1] >= i_num:
+    #         continue
+    #     time_event[line[0]][line[1]] = 1
 
     nbi = NBI()
     # nbi1 = NBI()
     # nbi2 = NBI()
     # nbi3 = NBI()
-    nbi.fit(ue)
-    np.savetxt(dataset+"_result/W.txt", nbi.W_)
+    # nbi.fit(ue)
+    # np.savetxt(dataset+"_result/W.txt", nbi.W_)
     # nbi1.fit(loc_event)
     # np.savetxt(dataset+"_result/locW.txt", nbi1.W_)
     # nbi2.fit(host_event)
     # np.savetxt(dataset+"_result/hostW.txt", nbi2.W_)
     # nbi3.fit(time_event)
     # np.savetxt(dataset + "_result/timeW.txt", nbi3.W_)
-    exit()
-    input("done!")
-    participant_list = []
+    # exit()
+    # input("done!")
+    participant_unum = []
     for i in range(i_num):
-        participant_list.append(0)
+        participant_unum.append(0)
     for ratingtuple in train_data:
         (i, j) = ratingtuple
-        participant_list[j] += 1
+        participant_unum[j] += 1
     max_k = 0
     for i in range(i_num):
-        max_k = max(max_k, participant_list[i])
+        max_k = max(max_k, participant_unum[i])
     print(max_k)
     u_testset = []
     for u in range(u_num):
@@ -207,7 +208,7 @@ if __name__ == '__main__':
 
     del train_data,test_data
     gc.collect()
-    # W = np.loadtxt(dataset+"_result/W.txt")
+    nbi.W_ = np.loadtxt(dataset+"_result/W.txt")
     # nbi1.W_ = np.loadtxt(dataset+"_result/locW.txt")
     # nbi2.W_ = np.loadtxt(dataset+"_result/hostW.txt")
     # nbi3.W_ = np.loadtxt(dataset+"_result/timeW.txt")
@@ -228,9 +229,9 @@ if __name__ == '__main__':
         # + lcfactor * nbi1.predict(ue[u]) + gfactor * nbi2.predict(ue[u])+time_factor * nbi3.predict(ue[u])
         # if need_novelty:
         #     for j in range(i_num):
-        #         print(len(participant_list[j]))
-        #         if len(participant_list[j]) > 1:
-        #             predict_ratings[u][j] = predict_ratings[u][j] / math.log(len(participant_list[j]), 2)
+        #         print(len(participant_unum[j]))
+        #         if len(participant_unum[j]) > 1:
+        #             predict_ratings[u][j] = predict_ratings[u][j] / math.log(len(participant_unum[j]), 2)
         tmp = getTopN(predict_ratings[u], cand_events)[:top_n]
         sub_list = []
         for j in tmp:
@@ -263,7 +264,7 @@ if __name__ == '__main__':
                 if recommend_list[i][j] in u_testset[u]:
                     hits += 1
                     DCG += math.log(j + 2, 2)
-                Novelty -= (math.log((1+participant_list[recommend_list[i][j]])/(1+max_k), 2)/math.log(j + 2, 2))
+                Novelty += (1+max_k)/(1+participant_unum[recommend_list[i][j]])/math.log(j + 2, 2)
             Precision += top_n
             Recall += len(u_testset[u])
 
@@ -278,7 +279,7 @@ if __name__ == '__main__':
     f.write('precisions=' + str(Precision) + '\n')
     f.write('recall=' + str(Recall) + '\n')
     f.write('f1=' + str(f1) + '\n')
-    f.write('NDCG=' + str(NDCG) + '\n')
-    f.write('Coverage=' + str(len(result_set)/i_num) + '\n')
+    f.write('nDCG=' + str(NDCG) + '\n')
+    f.write('coverage=' + str(len(result_set)/i_num) + '\n')
     f.write('novelty=' + str(Novelty))
     f.close()
