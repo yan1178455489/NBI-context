@@ -1,8 +1,10 @@
-dataset=douban_ran
-ufactor=1
-lcfactor=0
-hfactor=0
+dataset=douban
+ufactor=0
+tpfactor=3
+hfactor=7
 time_factor=0
+lcfactor=0
+addNF=1
 topN=5
 
-results=douban_ran_result/results1-0-0.txt
+results=results_add

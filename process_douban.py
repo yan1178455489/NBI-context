@@ -5,6 +5,7 @@ event_dict = dict()
 group_dict = dict()
 user_dict = dict()
 location_dict = dict()
+type_dict = dict()
 test_set = set()
 train_set = set()
 with open('douban/origin_douban/events.csv', 'r') as f:
@@ -12,13 +13,16 @@ with open('douban/origin_douban/events.csv', 'r') as f:
     event_count = 0
     group_count = 0
     locat_count = 0
+    type_count = 0
     wf = open('douban/group_event.csv', 'w')
     wf0 = open('douban/location_event.csv', 'w')
     wf1 = open('douban/time_event.csv', 'w')
+    wf2 = open('douban/topic_event.csv', 'w')
     for row in train_csv:
         gid = row['group_id']
         eid = row['id']
         lid = row['geo']
+        type = row['category']
         time = row['begin_time'].split(' ')
         weekday = datetime.strptime(time[0], '%Y/%m/%d').weekday()
         real_time = int(time[1].split(':')[0])
@@ -45,12 +49,17 @@ with open('douban/origin_douban/events.csv', 'r') as f:
         if gid not in group_dict:
             group_dict[gid] = str(group_count)
             group_count += 1
+        if type not in type_dict:
+            type_dict[type] = str(type_count)
+            type_count += 1
         wf.writelines(group_dict[gid]+','+event_dict[eid]+'\n')
         wf0.writelines(location_dict[lid] + ',' + event_dict[eid] + '\n')
         wf1.writelines(str(wp) + ',' + event_dict[eid] + '\n')
+        wf2.writelines(type_dict[type] + ',' + event_dict[eid] + '\n')
     wf.close()
     wf0.close()
     wf1.close()
+    wf2.close()
 
 print(event_count)
 
@@ -68,6 +77,16 @@ with open('douban/origin_douban/user_events.csv', 'r') as f:
         if eid in train_set:
             tf.writelines(user_dict[uid]+','+event_dict[eid]+'\n')
         else:
-            testf.writelines(user_dict[uid] + ',' + event_dict[eid] + '\n')
+            testf.writelines(user_dict[uid]+','+event_dict[eid]+'\n')
     tf.close()
     testf.close()
+
+with open('douban/origin_douban/user_relations.csv', 'r') as f:
+    uf_csv = csv.DictReader(f)
+    uf = open('douban/user_friend.csv', 'w')
+    for row in uf_csv:
+        uid = row['uid']
+        fid = row['fid']
+        if uid in user_dict and fid in user_dict:
+            uf.writelines(user_dict[uid]+','+user_dict[fid]+'\n')
+    uf.close()

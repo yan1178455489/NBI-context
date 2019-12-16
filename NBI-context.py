@@ -72,15 +72,18 @@ if __name__ == '__main__':
     dataset = para['dataset']
     ufactor = para['ufactor']
     ufactor = float(ufactor)
-    lcfactor = para['lcfactor']
-    lcfactor = float(lcfactor)
+    tpfactor = para['tpfactor']
+    tpfactor = float(tpfactor)
     gfactor = para['hfactor']
     gfactor = float(gfactor)
     time_factor = para['time_factor']
     time_factor = float(time_factor)
+    lcfactor = para['lcfactor']
+    lcfactor = float(lcfactor)
     top_n = para['topN']
     top_n = int(top_n)
     result_name = para['results']
+    addNF = para['addNF']
 
     file_path = dataset+'/train.csv'
     train_file = open(file_path, 'r')
@@ -175,25 +178,54 @@ if __name__ == '__main__':
     #     if line[1] >= i_num:
     #         continue
     #     time_event[line[0]][line[1]] = 1
+    # # 主题活动文件
+    # topic_num = 40
+    # topic_event = np.zeros((topic_num, i_num))
+    # row_index = 0
+    # with open(dataset+'/origin_douban/events_prob.txt', 'r') as ep_file:
+    #     for row in ep_file:
+    #         if row_index == i_num:
+    #             break
+    #         prob_array = row.split(' ')
+    #         for index in range(topic_num):
+    #             topic_event[index][row_index] = math.ceil(float(prob_array[index]))
+    #         row_index += 1
+    # # 类型活动文件
+    # topic_e = []
+    # et_file = open(dataset + '/topic_event.csv', 'r')
+    # for line in et_file:
+    #     data = line.split(',')
+    #     topic_e.append([int(data[0]), int(data[1])])
+    # et_file.close()
+    # topic_e = np.array(topic_e)
+    # topic_num = max(topic_e[:, 0]) + 1
+    # topic_event = np.zeros((topic_num, i_num))
+    # for line in topic_e:
+    #     if line[1] >= i_num:
+    #         continue
+    #     topic_event[line[0]][line[1]] = 1
 
-    nbi = NBI()
-    # nbi1 = NBI()
-    # nbi2 = NBI()
-    # nbi3 = NBI()
+    # nbi = NBI()
+    nbi1 = NBI()
+    nbi2 = NBI()
+    nbi3 = NBI()
+    nbi4 = NBI()
     # nbi.fit(ue)
     # np.savetxt(dataset+"_result/W.txt", nbi.W_)
-    # nbi1.fit(loc_event)
-    # np.savetxt(dataset+"_result/locW.txt", nbi1.W_)
+    # nbi1.fit(topic_event)
+    # np.savetxt(dataset+"_result/typeW.txt", nbi1.W_)
     # nbi2.fit(host_event)
     # np.savetxt(dataset+"_result/hostW.txt", nbi2.W_)
     # nbi3.fit(time_event)
     # np.savetxt(dataset + "_result/timeW.txt", nbi3.W_)
+    # nbi4.fit(loc_event)
+    # np.savetxt(dataset+"_result/locW.txt", nbi4.W_)
     # exit()
     # input("done!")
     participant_unum = []
     for i in range(i_num):
         participant_unum.append(0)
-    for ratingtuple in train_data:
+    for ratingtuple in test_data:
         (i, j) = ratingtuple
         participant_unum[j] += 1
     max_k = 0
@@ -208,30 +240,27 @@ if __name__ == '__main__':
 
     del train_data,test_data
     gc.collect()
-    nbi.W_ = np.loadtxt(dataset+"_result/W.txt")
-    # nbi1.W_ = np.loadtxt(dataset+"_result/locW.txt")
-    # nbi2.W_ = np.loadtxt(dataset+"_result/hostW.txt")
-    # nbi3.W_ = np.loadtxt(dataset+"_result/timeW.txt")
-    nbi.W_ = nbi.W_ - 0.75 * np.multiply(nbi.W_, nbi.W_)
-    # nbi1.W_ = nbi1.W_ - 0.75 * np.multiply(nbi1.W_, nbi1.W_)
-    # nbi2.W_ = nbi2.W_ - 0.75 * np.multiply(nbi2.W_, nbi2.W_)
-    # nbi3.W_ = nbi3.W_ - 0.75 * np.multiply(nbi3.W_, nbi3.W_)
-    # nbi.W_ = W
-    # nbi1.W_ = typeW
-    # nbi2.W_ = hostW
-    # nbi3.W_ = timeW
+    # nbi.W_ = np.loadtxt(dataset+"_result/W.txt")
+    nbi1.W_ = np.loadtxt(dataset+"_result/typeW.txt")
+    nbi2.W_ = np.loadtxt(dataset+"_result/hostW.txt")
+    nbi3.W_ = np.loadtxt(dataset+"_result/timeW.txt")
+    nbi4.W_ = np.loadtxt(dataset+"_result/locW.txt")
+    # nbi.W_ = nbi.W_ - 0.75 * np.multiply(nbi.W_, nbi.W_)
+    nbi1.W_ = nbi1.W_ - 0.75 * np.multiply(nbi1.W_, nbi1.W_)
+    nbi2.W_ = nbi2.W_ - 0.75 * np.multiply(nbi2.W_, nbi2.W_)
+    nbi3.W_ = nbi3.W_ - 0.75 * np.multiply(nbi3.W_, nbi3.W_)
+    nbi4.W_ = nbi4.W_ - 0.75 * np.multiply(nbi4.W_, nbi4.W_)
     predict_ratings = np.zeros((u_num, i_num))
 
     recommend_list = []
-    # need_novelty = True
+
     for u in cand_users:
-        predict_ratings[u] = ufactor * nbi.predict(ue[u])
-        # + lcfactor * nbi1.predict(ue[u]) + gfactor * nbi2.predict(ue[u])+time_factor * nbi3.predict(ue[u])
-        # if need_novelty:
-        #     for j in range(i_num):
-        #         print(len(participant_unum[j]))
-        #         if len(participant_unum[j]) > 1:
-        #             predict_ratings[u][j] = predict_ratings[u][j] / math.log(len(participant_unum[j]), 2)
+        predict_ratings[u] = tpfactor*nbi1.predict(ue[u])+gfactor*nbi2.predict(ue[u])+time_factor*nbi3.predict(ue[u])+lcfactor * nbi4.predict(ue[u])
+        # ufactor * nbi.predict(ue[u])+gfactor*nbi2.predict(ue[u])+time_factor*nbi3.predict(ue[u])+lcfactor * nbi4.predict(ue[u])
+        if addNF == '1':
+            for j in range(i_num):
+                if participant_unum[j] > 14:
+                    predict_ratings[u][j] = predict_ratings[u][j] / math.log(participant_unum[j], 30)
         tmp = getTopN(predict_ratings[u], cand_events)[:top_n]
         sub_list = []
         for j in tmp:
@@ -256,7 +285,7 @@ if __name__ == '__main__':
     iDCG = 0
     DCG = 0
     for i in range(1,top_n+1):
-        iDCG += math.log(i + 1,2)
+        iDCG += math.log(i + 1, 2)
     for i, u in enumerate(cand_users):
         if len(u_testset[u]) > 1:
             for j in range(top_n):
@@ -275,11 +304,20 @@ if __name__ == '__main__':
 
     print(hits)
     f1 = 2 * Precision * Recall / (Recall + Precision)
-    f = open(result_name, 'w')
+    f = open(dataset+'_result/'+result_name+str(tpfactor)+
+             '-'+str(gfactor)+'-'+str(time_factor)+'-'+str(lcfactor)+'.txt', 'w')
     f.write('precisions=' + str(Precision) + '\n')
     f.write('recall=' + str(Recall) + '\n')
     f.write('f1=' + str(f1) + '\n')
     f.write('nDCG=' + str(NDCG) + '\n')
     f.write('coverage=' + str(len(result_set)/i_num) + '\n')
-    f.write('novelty=' + str(Novelty))
+    f.write('novelty=' + str(Novelty) + '\n')
+    f.write('diversity=' + str(inter_div))
     f.close()
+    print('precisions=' + str(Precision))
+    print('recall=' + str(Recall))
+    print('f1=' + str(f1))
+    print('nDCG=' + str(NDCG))
+    print('coverage=' + str(len(result_set) / i_num))
+    print('novelty=' + str(Novelty))
+    print('diversity=' + str(inter_div))
